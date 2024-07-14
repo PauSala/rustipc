@@ -1,3 +1,4 @@
+use chrono::Local;
 use interprocess::local_socket::GenericFilePath;
 use std::{
     fs,
@@ -94,7 +95,9 @@ impl IpcMaster {
 fn main() -> std::io::Result<()> {
     let (tx, rx) = mpsc::channel::<String>();
     let handler = thread::spawn(|| {
-        let mut master = IpcMaster::new(SOCKET_PATH.to_owned(), tx);
+        let now = Local::now();
+        let formatted_time = now.format("%Y%m%d%H%M%S.sock").to_string();
+        let mut master = IpcMaster::new(formatted_time.to_owned(), tx);
         master.listen().unwrap();
     });
     println!("Blocking while command is running");
