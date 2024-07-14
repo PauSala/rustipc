@@ -10,10 +10,9 @@ use interprocess::local_socket::{prelude::*, ListenerOptions, Stream};
 use std::io::{self, prelude::*, BufReader};
 
 pub fn run_command() {
-    let mut child =
-        Command::new("/Users/pausala/dev/local_sockets_rust/client/target/release/client")
-            .spawn()
-            .expect("Failed to start the process");
+    let mut child = Command::new("/Users/pausala/dev/rustipc/client/target/release/client")
+        .spawn()
+        .expect("Failed to start the process");
     child.wait().expect("Failed to wait on the child process");
 }
 pub struct IpcMaster {
