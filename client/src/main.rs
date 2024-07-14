@@ -1,5 +1,6 @@
 use dioxus::desktop::{Config, WindowBuilder};
 use dioxus::prelude::*;
+static SOCKET_PATH: &str = "../server/rustipc.sock";
 
 fn main() {
     LaunchBuilder::desktop()
@@ -24,22 +25,39 @@ impl Command {
 fn send_to_server(command: Command) -> std::io::Result<()> {
     use interprocess::local_socket::{prelude::*, GenericFilePath, Stream};
     use std::io::{prelude::*, BufReader};
-
+    let window_handler = dioxus::desktop::window();
     // Pick a name.
-    let name = "/Users/pausala/dev/rustipc/server/example.sock".to_fs_name::<GenericFilePath>()?;
+    let name = SOCKET_PATH.to_fs_name::<GenericFilePath>()?;
     let mut buffer = String::with_capacity(128);
-    let conn = Stream::connect(name)?;
-    let mut conn = BufReader::new(conn);
-    conn.get_mut().write_all(command.as_str())?;
-    conn.read_line(&mut buffer)?;
-    match command {
-        Command::Hello => {}
-        Command::Stop => {
-            let window_handler = dioxus::desktop::window();
+    let conn = Stream::connect(name);
+    match conn {
+        Err(_) => {
             window_handler.close();
+            Ok(())
+        }
+        Ok(conn) => {
+            let mut conn = BufReader::new(conn);
+            let e = conn.get_mut().write_all(command.as_str());
+            if e.is_err() {
+                window_handler.close();
+                return Ok(());
+            }
+            let e = conn.read_line(&mut buffer);
+            if e.is_err() {
+                window_handler.close();
+                return Ok(());
+            }
+            match command {
+                Command::Hello => {
+                    return Ok(());
+                }
+                Command::Stop => {
+                    window_handler.close();
+                    return Ok(());
+                }
+            }
         }
     }
-    Ok(())
 }
 
 #[cfg(not(feature = "collect-assets"))]

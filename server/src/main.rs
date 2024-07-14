@@ -13,7 +13,7 @@ use std::io::{self, prelude::*, BufReader};
 static SOCKET_PATH: &str = "rustipc.sock";
 static CLIENT_PATH: &str = "../client/target/release/client";
 
-pub fn run_command() {
+pub fn open_ui() {
     let mut child = Command::new(CLIENT_PATH)
         .spawn()
         .expect("Failed to start the process");
@@ -98,7 +98,7 @@ fn main() -> std::io::Result<()> {
         master.listen().unwrap();
     });
     println!("Blocking while command is running");
-    run_command();
+    open_ui();
 
     for recieved in rx {
         println!("Recieved: {recieved}")
