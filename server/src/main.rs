@@ -11,7 +11,7 @@ use interprocess::local_socket::{prelude::*, ListenerOptions, Stream};
 use std::io::{self, prelude::*, BufReader};
 
 static SOCKET_PATH: &str = "rustipc.sock";
-static CLIENT_PATH: &str = "/Users/pausala/dev/rustipc/client/target/release/client";
+static CLIENT_PATH: &str = "../client/target/release/client";
 
 pub fn run_command() {
     let mut child = Command::new(CLIENT_PATH)
