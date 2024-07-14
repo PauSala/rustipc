@@ -1,6 +1,7 @@
 use interprocess::local_socket::GenericFilePath;
 use std::{
     fs,
+    path::Path,
     process::Command,
     sync::mpsc::{self, Sender},
     thread,
@@ -9,11 +10,24 @@ use std::{
 use interprocess::local_socket::{prelude::*, ListenerOptions, Stream};
 use std::io::{self, prelude::*, BufReader};
 
+static SOCKET_PATH: &str = "rustipc.sock";
+static CLIENT_PATH: &str = "/Users/pausala/dev/rustipc/client/target/release/client";
+
 pub fn run_command() {
-    let mut child = Command::new("/Users/pausala/dev/rustipc/client/target/release/client")
+    let mut child = Command::new(CLIENT_PATH)
         .spawn()
         .expect("Failed to start the process");
     child.wait().expect("Failed to wait on the child process");
+}
+
+pub fn delete_local_socket() {
+    let path = Path::new("example.txt");
+
+    if path.exists() {
+        println!("The file exists.");
+    } else {
+        println!("The file does not exist.");
+    }
 }
 pub struct IpcMaster {
     handle_error: fn(io::Result<Stream>) -> Option<Stream>,
@@ -39,9 +53,17 @@ impl IpcMaster {
         }
     }
 
+    pub fn delete_local_socket(&self) {
+        let path = Path::new(&self.socket_name);
+        if path.exists() {
+            fs::remove_file(&self.socket_name).expect("Path should exist");
+        }
+    }
+
     pub fn listen(&mut self) -> Result<(), io::Error> {
         let name = self.socket_name.clone().to_fs_name::<GenericFilePath>()?;
         let opts = ListenerOptions::new().name(name);
+        self.delete_local_socket();
         let listener = match opts.create_sync() {
             Err(e) if e.kind() == io::ErrorKind::AddrInUse => {
                 eprintln!(
@@ -73,24 +95,15 @@ impl IpcMaster {
         }
         // Remove socket file
         // interprocess should delte it, but on macos is not doing it
-        let e = fs::remove_file(&self.socket_name);
-        match e {
-            Ok(_) => {
-                println!("Socket was not deleted, now it is");
-                return Ok(());
-            }
-            Err(_) => {
-                println!("Socket already deleted");
-                return Ok(());
-            }
-        }
+        self.delete_local_socket();
+        Ok(())
     }
 }
 
 fn main() -> std::io::Result<()> {
     let (tx, rx) = mpsc::channel::<String>();
     let handler = thread::spawn(|| {
-        let mut master = IpcMaster::new("example.sock".to_owned(), tx);
+        let mut master = IpcMaster::new(SOCKET_PATH.to_owned(), tx);
         master.listen().unwrap();
     });
     println!("Blocking while command is running");
