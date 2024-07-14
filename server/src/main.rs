@@ -20,15 +20,6 @@ pub fn run_command() {
     child.wait().expect("Failed to wait on the child process");
 }
 
-pub fn delete_local_socket() {
-    let path = Path::new("example.txt");
-
-    if path.exists() {
-        println!("The file exists.");
-    } else {
-        println!("The file does not exist.");
-    }
-}
 pub struct IpcMaster {
     handle_error: fn(io::Result<Stream>) -> Option<Stream>,
     socket_name: String,
