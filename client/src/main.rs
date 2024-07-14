@@ -26,8 +26,7 @@ fn send_to_server(command: Command) -> std::io::Result<()> {
     use std::io::{prelude::*, BufReader};
 
     // Pick a name.
-    let name = "/Users/pausala/dev/local_sockets_rust/server/example.sock"
-        .to_fs_name::<GenericFilePath>()?;
+    let name = "/Users/pausala/dev/rustipc/server/example.sock".to_fs_name::<GenericFilePath>()?;
     let mut buffer = String::with_capacity(128);
     let conn = Stream::connect(name)?;
     let mut conn = BufReader::new(conn);
